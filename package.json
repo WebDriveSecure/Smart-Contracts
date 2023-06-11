@@ -1,0 +1,17 @@
+{
+  "name": "smart-contracts",
+  "version": "1.0.0",
+  "description": "Features:\r - Add Update\r     - normal method\r     - CID\r     - Encryption Key\r     - Checksum\r - Get Update\r     - query method\r     - return update if there is one\r - Update Status\r     - provide info on if the update failed\r - Add Vehicle\r     - Provide the public key\r     - verify the identity of the adder\r     - Add vehicle type\r - Permission Method\r     - Verify the identity\r     - Add permission\r -",
+  "main": "index.js",
+  "scripts": {
+    "test": "dev"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^4.9.1"
+  },
+  "dependencies": {
+    "solc": "^0.8.20"
+  }
+}
