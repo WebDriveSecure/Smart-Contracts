@@ -38,7 +38,8 @@ contract SecureUpdate is ERC20, AccessControl {
         string checksum;
         string cid;
         string updateVersion;
-        mapping(address => bool) updateStatus;
+        Set updateSuccess;
+        Set updateFail;
     }
 
     // Dictionary storing information for current updates
@@ -58,15 +59,24 @@ contract SecureUpdate is ERC20, AccessControl {
         uint8 _model
     ) public {
         require(hasRole(ADMIN, msg.sender), "Only ADMIN can add updates");
-        curUpdates[permissionArray[_model]] = update(
+        bytes32 _tmodel = permissionArray[_model];
+        curUpdates[_tmodel] = update(
             _key,
             _checksum,
             _cid,
-            _updateVersion
+            _updateVersion,
+            new Set(address(this)),
+            new Set(address(this))
         );
     }
 
-    function fetchUpdate(uint8 _model) public view returns (update memory) {
+    function fetchUpdate(
+        uint8 _model
+    )
+        public
+        view
+        returns (string memory, string memory, string memory, string memory)
+    {
         // Check has the correct role
         require(
             hasRole(permissionArray[_model], msg.sender),
@@ -74,11 +84,15 @@ contract SecureUpdate is ERC20, AccessControl {
         );
         // Check that system is not up to date
         require(
-            curUpdates[permissionArray[_model]].key == "" ||
-                curUpdates[permissionArray[_model]].key == false,
+            curUpdates[permissionArray[_model]].updateSuccess.has(msg.sender),
             "No update for this model"
         );
-        return curUpdates[permissionArray[_model]];
+        return (
+            curUpdates[permissionArray[_model]].key,
+            curUpdates[permissionArray[_model]].checksum,
+            curUpdates[permissionArray[_model]].cid,
+            curUpdates[permissionArray[_model]].updateVersion
+        );
     }
 
     function updateUpdateStatus(uint8 _model, bool _status) public {
@@ -87,10 +101,9 @@ contract SecureUpdate is ERC20, AccessControl {
             hasRole(permissionArray[_model], msg.sender),
             "Only the correct model can status updates"
         );
-        return
-            curUpdates[permissionArray[_model]].updateStatus[
-                msg.sender
-            ] = _status;
+        if (_status)
+            curUpdates[permissionArray[_model]].updateSuccess.add(msg.sender);
+        else curUpdates[permissionArray[_model]].updateFail.add(msg.sender);
     }
 
     function addVehicle(uint8 _model, address _vehicle) public {
@@ -112,5 +125,62 @@ contract SecureUpdate is ERC20, AccessControl {
             "Only admin can revoke permissions"
         );
         _revokeRole(ADMIN, _address);
+    }
+}
+
+contract Set {
+    address immutable controller;
+    address[] items;
+    mapping(address => uint) presence;
+
+    constructor(address controller_) {
+        controller = controller_ == address(0) ? msg.sender : controller_;
+    }
+
+    function size() public view returns (uint) {
+        return items.length;
+    }
+
+    function has(address item) public view returns (bool) {
+        return presence[item] > 0;
+    }
+
+    function indexOf(address item) public view returns (uint) {
+        return presence[item] - 1;
+    }
+
+    function get(uint index) public view returns (address) {
+        return items[index];
+    }
+
+    function add(address item) public {
+        require(msg.sender == controller, "Sender does not own this set.");
+
+        if (presence[item] == 0) {
+            items.push(item);
+            presence[item] = items.length; // index plus one
+        }
+    }
+
+    function remove(address item) public {
+        require(msg.sender == controller, "Sender does not own this set.");
+
+        if (presence[item] > 0) {
+            uint index = presence[item] - 1;
+            presence[item] = 0;
+            presence[items[items.length - 1]] = index + 1;
+            items[index] = items[items.length - 1];
+            items.pop();
+        }
+    }
+
+    function clear() public {
+        require(msg.sender == controller, "Sender does not own this set.");
+
+        for (uint i = 0; i < items.length; i++) {
+            presence[items[i]] = 0;
+        }
+
+        delete items;
     }
 }
