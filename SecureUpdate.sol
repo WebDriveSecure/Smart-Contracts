@@ -1,5 +1,5 @@
 // // SPDX-License-Identifier: GPL-3.0
-// To Compile Run: solcjs --optimize --bin ManufacturerContract.sol -o Smart_Contract_Binary
+// To Compile Run: solcjs --optimize --bin SecureUpdate.sol -o Smart_Contract_Binary
 
 pragma solidity >=0.8.0 <0.9.0;
 
@@ -33,6 +33,7 @@ contract SecureUpdate is ERC20, AccessControl {
     bytes32 private constant MODEL_C = keccak256("MODEL_C");
     bytes32[4] private permissionArray = [ADMIN, MODEL_A, MODEL_B, MODEL_C];
 
+    // Define Update Struct
     struct update {
         string key;
         string checksum;
@@ -45,10 +46,16 @@ contract SecureUpdate is ERC20, AccessControl {
     // Dictionary storing information for current updates
     mapping(bytes32 => update) private curUpdates;
 
-    // Dictionary storing
-
     constructor() ERC20("MyToken", "TKN") {
         _grantRole(ADMIN, msg.sender);
+    }
+
+    function hasUpdate(uint8 _model) public view returns (bool) {
+        require(
+            hasRole(permissionArray[_model], msg.sender),
+            "Only the correct model can fetch updates"
+        );
+        return (!curUpdates[permissionArray[_model]].updateSuccess.has(msg.sender));
     }
 
     function addUpdate(
@@ -65,8 +72,8 @@ contract SecureUpdate is ERC20, AccessControl {
             _checksum,
             _cid,
             _updateVersion,
-            new Set(address(this)),
-            new Set(address(this))
+            new Set(),
+            new Set()
         );
     }
 
@@ -84,7 +91,7 @@ contract SecureUpdate is ERC20, AccessControl {
         );
         // Check that system is not up to date
         require(
-            curUpdates[permissionArray[_model]].updateSuccess.has(msg.sender),
+            !(curUpdates[permissionArray[_model]].updateSuccess.has(msg.sender)),
             "No update for this model"
         );
         return (
@@ -103,7 +110,8 @@ contract SecureUpdate is ERC20, AccessControl {
         );
         if (_status)
             curUpdates[permissionArray[_model]].updateSuccess.add(msg.sender);
-        else curUpdates[permissionArray[_model]].updateFail.add(msg.sender);
+        else 
+            curUpdates[permissionArray[_model]].updateFail.add(msg.sender);
     }
 
     function addVehicle(uint8 _model, address _vehicle) public {
@@ -129,58 +137,18 @@ contract SecureUpdate is ERC20, AccessControl {
 }
 
 contract Set {
-    address immutable controller;
-    address[] items;
-    mapping(address => uint) presence;
+    // Define Set Variables
+    address[] values;
+    mapping(address => bool) is_in;
 
-    constructor(address controller_) {
-        controller = controller_ == address(0) ? msg.sender : controller_;
-    }
-
-    function size() public view returns (uint) {
-        return items.length;
-    }
-
-    function has(address item) public view returns (bool) {
-        return presence[item] > 0;
-    }
-
-    function indexOf(address item) public view returns (uint) {
-        return presence[item] - 1;
-    }
-
-    function get(uint index) public view returns (address) {
-        return items[index];
-    }
-
-    function add(address item) public {
-        require(msg.sender == controller, "Sender does not own this set.");
-
-        if (presence[item] == 0) {
-            items.push(item);
-            presence[item] = items.length; // index plus one
+    function add(address a) public {
+        if (!is_in[a]) {
+            values.push(a);
+            is_in[a] = true;
         }
     }
 
-    function remove(address item) public {
-        require(msg.sender == controller, "Sender does not own this set.");
-
-        if (presence[item] > 0) {
-            uint index = presence[item] - 1;
-            presence[item] = 0;
-            presence[items[items.length - 1]] = index + 1;
-            items[index] = items[items.length - 1];
-            items.pop();
-        }
-    }
-
-    function clear() public {
-        require(msg.sender == controller, "Sender does not own this set.");
-
-        for (uint i = 0; i < items.length; i++) {
-            presence[items[i]] = 0;
-        }
-
-        delete items;
+    function has(address a) public view returns (bool) {
+        return is_in[a];
     }
 }
