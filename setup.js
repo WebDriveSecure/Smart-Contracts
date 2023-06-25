@@ -131,36 +131,36 @@ async function contractValidation(contractId){
     const modelAHasUpdateVersion1 = contractGetUpdateResponse1.getString(3);
     console.log("Vehicle A has update version:", modelAHasUpdateVersion1);
 
-    // Change Update Status to true
-    const contractSendUpdateStatus1 = new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(1000000)
-      .setFunction(
-        "updateUpdateStatus",
-        new ContractFunctionParameters().addUint8(1).addBool(true)
-      );
-    const contractSendUpdateStatusResponse1 =
-      await contractSendUpdateStatus1.execute(MODEL_A);
-    const contractSendUpdateStatusReceipt1 =
-      await contractSendUpdateStatusResponse1.getReceipt(MODEL_A);
-    console.log("Update status sent to Model A");
+    // // Change Update Status to true
+    // const contractSendUpdateStatus1 = new ContractExecuteTransaction()
+    //   .setContractId(contractId)
+    //   .setGas(1000000)
+    //   .setFunction(
+    //     "updateUpdateStatus",
+    //     new ContractFunctionParameters().addUint8(1).addBool(true)
+    //   );
+    // const contractSendUpdateStatusResponse1 =
+    //   await contractSendUpdateStatus1.execute(MODEL_A);
+    // const contractSendUpdateStatusReceipt1 =
+    //   await contractSendUpdateStatusResponse1.getReceipt(MODEL_A);
+    // console.log("Update status sent to Model A");
 
-    // Expect failure here
-    const contractGetUpdate2 = new ContractCallQuery()
-      .setContractId(contractId)
-      .setGas(100000)
-      .setFunction("fetchUpdate", new ContractFunctionParameters().addUint8(1));
-    const contractGetUpdateResponse2 = await contractGetUpdate1.execute(
-      MODEL_A
-    );
-    const modelAKey2 = contractGetUpdateResponse2.getString(0);
-    console.log("Vehicle A Key:", modelAKey2);
-    const modelAChecksum2 = contractGetUpdateResponse2.getString(1);
-    console.log("Vehicle A update hash:", modelAChecksum2);
-    const modelACID2 = contractGetUpdateResponse2.getString(2);
-    console.log("Vehicle A CID:", modelACID2);
-    const modelAHasUpdateVersion2 = contractGetUpdateResponse2.getString(3);
-    console.log("Vehicle A has update version:", modelAHasUpdateVersion2);
+    // // Expect failure here
+    // const contractGetUpdate2 = new ContractCallQuery()
+    //   .setContractId(contractId)
+    //   .setGas(100000)
+    //   .setFunction("fetchUpdate", new ContractFunctionParameters().addUint8(1));
+    // const contractGetUpdateResponse2 = await contractGetUpdate1.execute(
+    //   MODEL_A
+    // );
+    // const modelAKey2 = contractGetUpdateResponse2.getString(0);
+    // console.log("Vehicle A Key:", modelAKey2);
+    // const modelAChecksum2 = contractGetUpdateResponse2.getString(1);
+    // console.log("Vehicle A update hash:", modelAChecksum2);
+    // const modelACID2 = contractGetUpdateResponse2.getString(2);
+    // console.log("Vehicle A CID:", modelACID2);
+    // const modelAHasUpdateVersion2 = contractGetUpdateResponse2.getString(3);
+    // console.log("Vehicle A has update version:", modelAHasUpdateVersion2);
 }
 
 async function main(){
@@ -168,10 +168,3 @@ async function main(){
     contractValidation(deployedContractId);
 }
 main();
-
-
-
-
-
-
-
